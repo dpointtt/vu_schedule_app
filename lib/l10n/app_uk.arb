@@ -1,0 +1,44 @@
+{
+  "@@locale": "uk",
+  "dateLocale": "uk_UA",
+
+  "noEvents": "Сьогодні занять немає!",
+  "noSettings": "Вкажіть свою навчальну групу в налаштуваннях!",
+
+  "now": "ЗАРАЗ",
+  "minBreak": "хв. перерва",
+
+  "settings": "Налаштування",
+
+  "academicSettings": "Навчальні параметри",
+  "studyType": "Тип навчання",
+  "studyProgram": "Навчальна програма",
+  "course": "Курс",
+  "group": "Група",
+  "subgroups": "Підгрупи",
+  "subgroupNumber": "Номер підгрупи",
+  "chooseSubgroups": "Змінити підгрупи",
+
+  "preferences": "Налаштування",
+  "language": "Мова",
+  "theme": "Тема",
+  "editTheme": "Зміна колірної схеми застосунку",
+
+  "selectYourStudyType": "Оберіть тип навчання",
+  "selectYourStudyTypeAndStudyProgramFirst": "Спочатку оберіть тип навчання та навчальну програму",
+  "selectYourStudyTypeStudyProgramAndCourseFirst": "Спочатку оберіть тип навчання, навчальну програму та курс",
+
+  "selectYourStudyProgram": "Оберіть навчальну програму",
+  "selectYourStudyProgramAndCourseFirst": "Спочатку оберіть навчальну програму та курс",
+  "selectYourStudyProgramFirst": "Спочатку оберіть навчальну програму",
+
+  "selectYourCourse": "Оберіть курс",
+  "selectYourCourseFirst": "Спочатку оберіть курс",
+
+  "selectYourGroup": "Оберіть групу",
+
+  "subgroupsSelectionEmpty": "Заняття не знайдені.",
+  "cancel": "Відмінити",
+  "remove": "Видалити",
+  "save": "Зберегти"
+}

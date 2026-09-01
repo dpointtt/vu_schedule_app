@@ -1,0 +1,44 @@
+{
+  "@@locale": "en",
+  "dateLocale": "en_US",
+
+  "noEvents": "There are no classes today!",
+  "noSettings": "Select your study group in the settings!",
+
+  "now": "NOW",
+  "minBreak": "min. break",
+
+  "settings": "Settings",
+
+  "academicSettings": "Academic settings",
+  "studyType": "Study type",
+  "studyProgram": "Study program",
+  "course": "Course",
+  "group": "Group",
+  "subgroups": "Subgroups",
+  "subgroupNumber": "Subgroup number",
+  "chooseSubgroups": "Change subgroups",
+
+  "preferences": "Preferences",
+  "language": "Language",
+  "theme": "Theme",
+  "editTheme": "Change app color scheme",
+
+  "selectYourStudyType": "Select your study type",
+  "selectYourStudyTypeAndStudyProgramFirst": "Select your study type and study program first",
+  "selectYourStudyTypeStudyProgramAndCourseFirst": "Select your study type, study program and course first",
+
+  "selectYourStudyProgram": "Select your study program",
+  "selectYourStudyProgramAndCourseFirst": "Select your study program and course first",
+  "selectYourStudyProgramFirst": "Select your study program first",
+
+  "selectYourCourse": "Select your course",
+  "selectYourCourseFirst": "Select your course first",
+
+  "selectYourGroup": "Select your group",
+
+  "subgroupsSelectionEmpty": "Classes not found.",
+  "cancel": "Cancel",
+  "remove": "Remove",
+  "save": "Save"
+}

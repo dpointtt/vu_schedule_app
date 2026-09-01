@@ -1,0 +1,44 @@
+{
+  "@@locale": "lt",
+  "dateLocale": "lt_LT",
+
+  "noEvents": "Šiandien paskaitų nėra!",
+  "noSettings": "Nurodykite savo mokomąją grupę nustatymuose!",
+
+  "now": "DABAR",
+  "minBreak": "min. pertrauka",
+
+  "settings": "Nustatymai",
+
+  "academicSettings": "Akademiniai parametrai",
+  "studyType": "Studijų tipas",
+  "studyProgram": "Studijų programa",
+  "course": "Kursas",
+  "group": "Grupė",
+  "subgroups": "Pogrupiai",
+  "subgroupNumber": "Pogrupio numeris",
+  "chooseSubgroups": "Pakeisti pogrupius",
+
+  "preferences": "Nuostatos",
+  "language": "Kalba",
+  "theme": "Tema",
+  "editTheme": "Programėlės spalvų keitimas",
+
+  "selectYourStudyType": "Pasirinkite studijų tipą",
+  "selectYourStudyTypeAndStudyProgramFirst": "Pirmiausia pasirinkite studijų tipą ir studijų programą",
+  "selectYourStudyTypeStudyProgramAndCourseFirst": "Pirmiausia pasirinkite studijų tipą, studijų programą ir kursą",
+
+  "selectYourStudyProgram": "Pasirinkite studijų programą",
+  "selectYourStudyProgramAndCourseFirst": "Pirmiausia pasirinkite studijų programą ir kursą",
+  "selectYourStudyProgramFirst": "Pirmiausia pasirinkite studijų programą",
+
+  "selectYourCourse": "Pasirinkite kursą",
+  "selectYourCourseFirst": "Pirmiausia pasirinkite kursą",
+
+  "selectYourGroup": "Pasirinkite grupę",
+
+  "subgroupsSelectionEmpty": "Užsiėmimų nerasta.",
+  "cancel": "Atšaukti",
+  "remove": "Pašalinti",
+  "save": "Išsaugoti"
+}

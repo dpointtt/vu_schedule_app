@@ -1,0 +1,44 @@
+{
+  "@@locale": "ru",
+  "dateLocale": "ru_RU",
+
+  "noEvents": "Сегодня занятий нет!",
+  "noSettings": "Укажите свою учебную группу в настройках!",
+
+  "now": "СЕЙЧАС",
+  "minBreak": "мин. перерыв",
+
+  "settings": "Настройки",
+
+  "academicSettings": "Учебные параметры",
+  "studyType": "Тип обучения",
+  "studyProgram": "Учебная программа",
+  "course": "Курс",
+  "group": "Группа",
+  "subgroups": "Подгруппы",
+  "subgroupNumber": "Номер подгруппы",
+  "chooseSubgroups": "Изменить подгруппы",
+
+  "preferences": "Предпочтения",
+  "language": "Язык",
+  "theme": "Тема",
+  "editTheme": "Изменение цветовой схемы приложения",
+
+  "selectYourStudyType": "Выберите тип обучения",
+  "selectYourStudyTypeAndStudyProgramFirst": "Сначала выберите тип обучения и учебную программу",
+  "selectYourStudyTypeStudyProgramAndCourseFirst": "Сначала выберите тип обучения, учебную программу и курс",
+
+  "selectYourStudyProgram": "Выберите учебную программу",
+  "selectYourStudyProgramAndCourseFirst": "Сначала выберите учебную программу и курс",
+  "selectYourStudyProgramFirst": "Сначала выберите учебную программу",
+
+  "selectYourCourse": "Выберите курс",
+  "selectYourCourseFirst": "Сначала выберите курс",
+
+  "selectYourGroup": "Выберите группу",
+
+  "subgroupsSelectionEmpty": "Занятия не найдены.",
+  "cancel": "Отменить",
+  "remove": "Удалить",
+  "save": "Сохранить"
+}

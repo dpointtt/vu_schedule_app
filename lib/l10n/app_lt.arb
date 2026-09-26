@@ -40,5 +40,21 @@
   "subgroupsSelectionEmpty": "Užsiėmimų nerasta.",
   "cancel": "Atšaukti",
   "remove": "Pašalinti",
-  "save": "Išsaugoti"
+  "save": "Išsaugoti",
+
+  "scheduleSectionTitle": "Tvarkaraštis",
+  "noSettings": "Tvarkaraštis dar neįkeltas. Pridėkite jį nustatymuose.",
+  "scheduleMissing": "Tvarkaraščio failo nėra",
+  "scheduleStats": "{subjects} dalykų • {events} užsiėmimų",
+  "scheduleDateRange": "nuo {start} iki {end}",
+  "changeSchedule": "Keisti tvarkaraštį",
+  "uploadSchedule": "Įkelti tvarkaraštį",
+  "whereToGetSchedule": "Kur gauti tvarkaraščio failą?",
+  "scheduleSourceInstructions": "Atsidarykite svetainę tvarkarasciai.vu.lt, susiraskite savo fakultetą ir grupę, paspauskite kalendoriaus eksporto mygtuką ir atsisiųskite .ics formato failą. Tada grįžkite čia ir įkelkite jį mygtuku „Įkelti tvarkaraštį“.",
+  "linkCopied": "Nuoroda nukopijuota",
+  "scheduleAlreadyExistsTitle": "Toks tvarkaraštis jau yra",
+  "scheduleAlreadyExistsMessage": "Tvarkaraštis „{name}“ jau egzistuoja. Įkelti jį dar kartą?\n\nPastaba: šio tvarkaraščio pogrupių nustatymai bus atstatyti.",
+  "upload": "Įkelti",
+  "parsingError": "Nepavyko atpažinti tvarkaraščio failo",
+  "scheduleUnnamed": "Tvarkaraštis {date}"
 }

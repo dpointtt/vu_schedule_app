@@ -40,5 +40,21 @@
   "subgroupsSelectionEmpty": "Заняття не знайдені.",
   "cancel": "Відмінити",
   "remove": "Видалити",
-  "save": "Зберегти"
+  "save": "Зберегти",
+
+  "scheduleSectionTitle": "Розклад",
+  "noSettings": "Розклад ще не завантажено. Додайте його в налаштуваннях.",
+  "scheduleMissing": "Файл розкладу відсутній",
+  "scheduleStats": "{subjects} предметів • {events} занять",
+  "scheduleDateRange": "з {start} по {end}",
+  "changeSchedule": "Змінити розклад",
+  "uploadSchedule": "Завантажити розклад",
+  "whereToGetSchedule": "Де взяти файл розкладу?",
+  "scheduleSourceInstructions": "Відкрийте сайт tvarkarasciai.vu.lt, знайдіть свій факультет і групу, натисніть кнопку експорту в календар і завантажте файл з розширенням .ics. Після цього поверніться сюди і завантажте його за допомогою кнопки «Завантажити розклад».",
+  "linkCopied": "Посилання скопійовано",
+  "scheduleAlreadyExistsTitle": "Розклад вже існує",
+  "scheduleAlreadyExistsMessage": "Розклад «{name}» вже існує. Завантажити його повторно?\n\nПримітка: налаштування підгруп для цього розкладу буде скинуто.",
+  "upload": "Завантажити",
+  "parsingError": "Не вдалося розпізнати файл розкладу",
+  "scheduleUnnamed": "Розклад {date}"
 }

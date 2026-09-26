@@ -1,7 +1,14 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:vu_parser/vu_parser.dart';
+import 'package:flutter/services.dart';
+import 'package:vu_schedule_app/db/app_database.dart';
+import 'package:vu_schedule_app/db/database.dart';
+import 'package:vu_schedule_app/db/repositories/schedule_repository.dart';
 import 'package:vu_schedule_app/pages/settings_selection_page.dart';
 import 'package:vu_schedule_app/pages/subgroups_selection_page.dart';
+import 'package:vu_schedule_app/parser/schedule_parser.dart';
 import 'package:vu_schedule_app/styles/colors.dart';
 
 import '../l10n/app_localizations.dart';
@@ -9,6 +16,12 @@ import '../storage/app_language.dart';
 import '../storage/settings_repository.dart';
 import '../storage/storage_service.dart';
 import '../storage/user_settings.dart';
+
+String _formatDate(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day.$month.${date.year}';
+}
 
 class SettingsPage extends StatefulWidget {
   final ValueChanged<AppLanguage>? onLanguageChanged;
@@ -22,16 +35,48 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = false;
 
-  final client = VUClient();
   UserSettings? settings;
 
   bool settingsChanged = false;
+
+  final ScheduleRepository scheduleRepository = ScheduleRepository(database);
+
+  Schedule? activeSchedule;
+  List<Schedule> allSchedules = [];
+  ScheduleStats stats = ScheduleStats(
+    eventsCount: 0,
+    subjectsCount: 0,
+    firstEventStart: null,
+    lastEventStart: null,
+  );
 
   @override
   void initState() {
     super.initState();
 
+    _loadScheduleData();
     _loadSettings();
+  }
+
+  Future<void> _loadScheduleData() async {
+    final schedules = await scheduleRepository.getAllSchedules();
+    final active = await scheduleRepository.getActiveSchedule();
+    final loadedStats = active != null
+        ? await scheduleRepository.getStatsForSchedule(active.id)
+        : ScheduleStats(
+      eventsCount: 0,
+      subjectsCount: 0,
+      firstEventStart: null,
+      lastEventStart: null,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      allSchedules = schedules;
+      activeSchedule = active;
+      stats = loadedStats;
+    });
   }
 
   Future<void> _loadSettings() async {
@@ -44,213 +89,84 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  Future<void> _selectStudyType() async {
-    final selected = await Navigator.push<StudyType>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SettingsSelectionPage<StudyType>(
-          title: AppLocalizations.of(context)!.studyType,
-          items: StudyType.values,
-          selected: settings?.studyTypeId == null
-              ? null
-              : StudyType.fromId(settings!.studyTypeId!),
-          labelBuilder: (type) => type.displayName,
-          onSelected: (type) {
-            Navigator.pop(context, type);
-          },
-        ),
-      ),
-    );
-
-    if (selected == null) {
-      return;
-    }
-
-    final current = settings?.studyTypeId == null
-        ? null
-        : StudyType.fromId(settings!.studyTypeId!);
-
-    if (selected == current) {
-      return;
-    }
-
-    await StorageService.setStudyTypeId(selected.id);
-
-    await StorageService.removeStudyProgramName();
-    await StorageService.removeCourseNumber();
-    await StorageService.removeGroupNumber();
-    await StorageService.removeGroupScheduleUrl();
-
-    settingsChanged = true;
-
-    await _loadSettings();
-  }
-
-  Future<void> _selectStudyProgram() async {
-    if (settings?.studyTypeId == null) {
-      return;
-    }
-
+  Future<void> _selectIcsFile() async {
     await _runAsyncAction(() async {
-      final response = await client.fetchPrograms(
-        StudyType.fromId(settings!.studyTypeId!),
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: ['ics'],
       );
-      final programs = ProgramSelectorParser.parseSelectablePrograms(response);
-      final programNames = programs.map((program) => program.label).toList();
-      final selected = await Navigator.push<String>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SettingsSelectionPage<String>(
-            title: AppLocalizations.of(context)!.studyProgram,
-            items: programNames,
-            selected: settings!.studyProgramName,
-            labelBuilder: (item) => item,
-            onSelected: (item) {
-              Navigator.pop(context, item);
-            },
+
+      if (file == null) return;
+
+      final bytes = await file.readAsBytes();
+      final content = utf8.decode(bytes);
+
+      final parser = ScheduleParser();
+      final schedule = parser.parse(content);
+
+      if (schedule.events.isEmpty) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.parsingError)),
+        );
+
+        return;
+      }
+
+      final scheduleName = schedule.name ??
+          AppLocalizations.of(context)!.scheduleUnnamed(_formatDate(DateTime.now()));
+      final existingSchedule =
+      await scheduleRepository.getScheduleByName(scheduleName);
+
+      if (existingSchedule != null) {
+        if (!mounted) return;
+
+        final shouldImportAgain = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: secondaryColor,
+            title: Text(
+              AppLocalizations.of(context)!.scheduleAlreadyExistsTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+            content: Text(
+              AppLocalizations.of(context)!.scheduleAlreadyExistsMessage(scheduleName),
+              style: TextStyle(color: textColor),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  AppLocalizations.of(context)!.cancel,
+                  style: TextStyle(color: textColor.withValues(alpha: 0.6)),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(
+                  AppLocalizations.of(context)!.upload,
+                  style: TextStyle(color: accentColor),
+                ),
+              ),
+            ],
           ),
-        ),
-      );
+        );
 
-      if (selected == null) {
-        return;
+        if (shouldImportAgain != true) return;
+
+        await scheduleRepository.reImportEvents(schedule, existingSchedule.id);
+      } else {
+        await scheduleRepository.importEvents(schedule, scheduleName);
       }
-
-      if (selected == settings?.studyProgramName) {
-        return;
-      }
-
-      await StorageService.setStudyProgramName(selected);
-
-      await StorageService.removeCourseNumber();
-      await StorageService.removeGroupNumber();
-      await StorageService.removeGroupScheduleUrl();
 
       settingsChanged = true;
 
-      await _loadSettings();
-    });
-  }
-
-  Future<void> _selectCourse() async {
-    if (settings?.studyProgramName == null) {
-      return;
-    }
-
-    await _runAsyncAction(() async {
-      final response = await client.fetchCourses(
-        StudyType.fromId(settings!.studyTypeId!),
-        settings!.studyProgramName!,
-      );
-
-      final courseObjects = ProgramSelectorParser.parseSelectableCourses(
-        response,
-      );
-
-      final courses = courseObjects.map((course) => course.number!).toList();
-
-      final selected = await Navigator.push<int>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SettingsSelectionPage<int>(
-            title: AppLocalizations.of(context)!.course,
-            items: courses,
-            selected: settings!.courseNumber,
-            labelBuilder: (item) {
-              return '$item '
-                  '${AppLocalizations.of(context)!.course}';
-            },
-            onSelected: (item) {
-              Navigator.pop(context, item);
-            },
-          ),
-        ),
-      );
-
-      if (selected == null) {
-        return;
-      }
-
-      if (selected == settings?.courseNumber) {
-        return;
-      }
-
-      await StorageService.setCourseNumber(selected);
-
-      await StorageService.removeGroupNumber();
-      await StorageService.removeGroupScheduleUrl();
-
-      settingsChanged = true;
-
-      await _loadSettings();
-    });
-  }
-
-  Future<void> _selectGroup() async {
-    if (settings?.courseNumber == null) {
-      return;
-    }
-
-    await _runAsyncAction(() async {
-      final response = await client.fetchGroups(
-        StudyType.fromId(settings!.studyTypeId!),
-        settings!.studyProgramName!,
-        settings!.courseNumber!,
-      );
-
-      final groups = ProgramSelectorParser.parseGroups(response);
-
-      StudyGroup? currentGroup;
-
-      final currentUrl = settings?.groupScheduleUrl;
-
-      if (currentUrl != null) {
-        for (final group in groups) {
-          if (group.toSchedulePathSegment() == currentUrl) {
-            currentGroup = group;
-            break;
-          }
-        }
-      }
-
-      final selected = await Navigator.push<StudyGroup>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SettingsSelectionPage<StudyGroup>(
-            title: AppLocalizations.of(context)!.group,
-            items: groups,
-            selected: currentGroup,
-            labelBuilder: (group) => group.label,
-            onSelected: (group) {
-              Navigator.pop(context, group);
-            },
-          ),
-        ),
-      );
-
-      if (selected == null) {
-        return;
-      }
-
-      final groupNumber = groups.indexOf(selected) + 1;
-
-      if (groupNumber <= 0) {
-        return;
-      }
-
-      final scheduleUrl = selected.toSchedulePathSegment();
-
-      if (scheduleUrl == settings?.groupScheduleUrl) {
-        return;
-      }
-
-      await StorageService.setGroupNumber(groupNumber);
-
-      await StorageService.setGroupScheduleUrl(scheduleUrl);
-
-      settingsChanged = true;
-
-      await _loadSettings();
+      await _loadScheduleData();
     });
   }
 
@@ -270,13 +186,8 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    if (selected == null) {
-      return;
-    }
-
-    if (selected == settings?.appLanguage) {
-      return;
-    }
+    if (selected == null) return;
+    if (selected == settings?.appLanguage) return;
 
     await StorageService.setLanguage(selected);
 
@@ -287,45 +198,120 @@ class _SettingsPageState extends State<SettingsPage> {
     await _loadSettings();
   }
 
-  Future<void> _selectSubgroups() async {
-    if (settings?.groupScheduleUrl == null) return;
+  Future<void> _openSubgroupsSelection() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SubgroupsSelectionPage()),
+    );
 
-    await _runAsyncAction(() async {
-      final scheduleUrl = settings!.groupScheduleUrl!;
-      final uniqueEvents = <String, ScheduleEvent>{};
+    settingsChanged = true;
+  }
 
-      final now = DateTime.now();
-      try {
-        final response = await client.fetchScheduleBetweenDatesWithPath(
-          scheduleUrl,
-          now.subtract(Duration(days: 30)),
-          now.add(Duration(days: 30)),
-        );
-        final events = ScheduleParser.parse(response);
-
-        for (final event in events) {
-          if (event.className != null && event.className!.isNotEmpty) {
-            uniqueEvents[event.className!] = event;
-          }
-        }
-      } catch (_) {}
-
-      if (!mounted) return;
-
-      final eventsList = uniqueEvents.values.toList();
-
-      eventsList.sort((a, b) => a.title.compareTo(b.title));
-
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SubgroupsSelectionPage(events: eventsList),
+  Future<void> _openScheduleSwitcher() async {
+    final selected = await showDialog<Schedule>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        backgroundColor: secondaryColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          AppLocalizations.of(context)!.changeSchedule,
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
-      );
+        children: allSchedules.map((schedule) {
+          final isActive = schedule.id == activeSchedule?.id;
 
-      settingsChanged = true;
-      await _loadSettings();
-    });
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, schedule),
+            child: Row(
+              children: [
+                Icon(
+                  isActive ? Icons.check_circle : Icons.circle_outlined,
+                  color: isActive ? Colors.green : textColor.withValues(alpha: 0.4),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    schedule.scheduleName,
+                    style: TextStyle(color: textColor),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (selected == null || selected.id == activeSchedule?.id) return;
+
+    await scheduleRepository.setActiveSchedule(selected.id);
+
+    settingsChanged = true;
+
+    await _loadScheduleData();
+  }
+
+  Future<void> _showScheduleSourceInfo() async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: secondaryColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.whereToGetSchedule,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              AppLocalizations.of(context)!.scheduleSourceInstructions,
+              style: TextStyle(
+                color: textColor.withValues(alpha: 0.8),
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'https://tvarkarasciai.vu.lt',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.copy, color: textColor.withValues(alpha: 0.6)),
+                  onPressed: () {
+                    Clipboard.setData(
+                      const ClipboardData(text: 'https://tvarkarasciai.vu.lt'),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(AppLocalizations.of(context)!.linkCopied)),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _runAsyncAction(Future<void> Function() action) async {
@@ -379,6 +365,42 @@ class _SettingsPageState extends State<SettingsPage> {
           body: ListView(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
             children: [
+              _SectionTitle(AppLocalizations.of(context)!.scheduleSectionTitle),
+
+              const SizedBox(height: 14),
+
+              _ScheduleStatusCard(
+                activeSchedule: activeSchedule,
+                stats: stats,
+              ),
+
+              const SizedBox(height: 12),
+
+              if (allSchedules.length > 1) ...[
+                _ActionButton(
+                  icon: Icons.swap_horiz,
+                  label: AppLocalizations.of(context)!.changeSchedule,
+                  onTap: _openScheduleSwitcher,
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              _ActionButton(
+                icon: Icons.upload_file,
+                label: AppLocalizations.of(context)!.uploadSchedule,
+                onTap: _selectIcsFile,
+              ),
+
+              const SizedBox(height: 10),
+
+              _ActionButton(
+                icon: Icons.help_outline,
+                label: AppLocalizations.of(context)!.whereToGetSchedule,
+                onTap: _showScheduleSourceInfo,
+              ),
+
+              const SizedBox(height: 30),
+
               _SectionTitle(AppLocalizations.of(context)!.academicSettings),
 
               const SizedBox(height: 14),
@@ -386,46 +408,10 @@ class _SettingsPageState extends State<SettingsPage> {
               _SettingsCard(
                 children: [
                   _SettingsTile(
-                    title: AppLocalizations.of(context)!.studyType,
-                    value: _studyTypeSelectedText(settings!),
-                    enabled: true,
-                    onTap: _selectStudyType,
-                  ),
-
-                  _Divider(),
-
-                  _SettingsTile(
-                    title: AppLocalizations.of(context)!.studyProgram,
-                    value: _studyProgramSelectedText(settings!),
-                    enabled: settings!.studyTypeId != null,
-                    onTap: _selectStudyProgram,
-                  ),
-
-                  _Divider(),
-
-                  _SettingsTile(
-                    title: AppLocalizations.of(context)!.course,
-                    value: _courseSelectedText(settings!),
-                    enabled: settings!.studyProgramName != null,
-                    onTap: _selectCourse,
-                  ),
-
-                  _Divider(),
-
-                  _SettingsTile(
-                    title: AppLocalizations.of(context)!.group,
-                    value: _groupSelectedText(settings!),
-                    enabled: settings!.courseNumber != null,
-                    onTap: _selectGroup,
-                  ),
-
-                  _Divider(),
-
-                  _SettingsTile(
                     title: AppLocalizations.of(context)!.subgroups,
                     value: AppLocalizations.of(context)!.chooseSubgroups,
-                    enabled: settings!.groupNumber != null,
-                    onTap: _selectSubgroups,
+                    enabled: stats.subjectsCount > 0,
+                    onTap: _openSubgroupsSelection,
                   ),
                 ],
               ),
@@ -457,50 +443,143 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
     );
   }
+}
 
-  String _groupSelectedText(UserSettings settings) {
-    if (settings.studyTypeId == null) {
-      return AppLocalizations.of(context)!.selectYourStudyTypeStudyProgramAndCourseFirst;
-    }
-    if (settings.studyProgramName == null) {
-      return AppLocalizations.of(context)!.selectYourStudyProgramAndCourseFirst;
-    }
-    if (settings.courseNumber == null) {
-      return AppLocalizations.of(context)!.selectYourCourseFirst;
-    }
-    if (settings.groupNumber == null) {
-      return AppLocalizations.of(context)!.selectYourGroup;
-    }
-    return '${settings.groupNumber!.toString()} ${AppLocalizations.of(context)!.group}';
+class _ScheduleStatusCard extends StatelessWidget {
+  final Schedule? activeSchedule;
+  final ScheduleStats stats;
+
+  const _ScheduleStatusCard({
+    required this.activeSchedule,
+    required this.stats,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isMissing = activeSchedule == null;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: secondaryColor,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: textColor.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(Icons.calendar_month, color: textColor, size: 42),
+              Positioned(
+                right: -6,
+                top: -6,
+                child: Icon(
+                  isMissing ? Icons.warning_rounded : Icons.check_circle,
+                  color: isMissing ? Colors.amber : Colors.green,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isMissing
+                      ? AppLocalizations.of(context)!.scheduleMissing
+                      : activeSchedule!.scheduleName,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+
+                if (!isMissing) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    AppLocalizations.of(context)!.scheduleStats(stats.subjectsCount, stats.eventsCount),
+                    style: TextStyle(
+                      color: textColor.withValues(alpha: 0.6),
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (stats.firstEventStart != null && stats.lastEventStart != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      AppLocalizations.of(context)!.scheduleDateRange(
+                        _formatDate(stats.firstEventStart!),
+                        _formatDate(stats.lastEventStart!),
+                      ),
+                      style: TextStyle(
+                        color: textColor.withValues(alpha: 0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  String _courseSelectedText(UserSettings settings) {
-    if (settings.studyTypeId == null) {
-      return AppLocalizations.of(context)!.selectYourStudyTypeAndStudyProgramFirst;
-    }
-    if (settings.studyProgramName == null) {
-      return AppLocalizations.of(context)!.selectYourStudyProgramFirst;
-    }
-    if (settings.courseNumber == null) {
-      return AppLocalizations.of(context)!.selectYourCourse;
-    }
-    return '${settings.courseNumber!.toString()} ${AppLocalizations.of(context)!.course}';
-  }
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-  String _studyProgramSelectedText(UserSettings settings) {
-    if (settings.studyTypeId == null) {
-      return AppLocalizations.of(context)!.selectYourStudyType;
-    }
-    if (settings.studyProgramName == null) {
-      return AppLocalizations.of(context)!.selectYourStudyProgram;
-    }
-    return settings.studyProgramName!;
-  }
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
-  String _studyTypeSelectedText(UserSettings settings) {
-    return settings.studyTypeId == null
-        ? AppLocalizations.of(context)!.selectYourStudyType
-        : StudyType.fromId(settings.studyTypeId!).displayName;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: secondaryColor,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Icon(icon, color: textColor, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: textColor.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -541,16 +620,6 @@ class _SettingsCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(children: children),
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16),
-      child: Divider(height: 1, color: textColor.withValues(alpha: 0.08)),
     );
   }
 }

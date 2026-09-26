@@ -40,5 +40,21 @@
   "subgroupsSelectionEmpty": "Classes not found.",
   "cancel": "Cancel",
   "remove": "Remove",
-  "save": "Save"
+  "save": "Save",
+
+  "scheduleSectionTitle": "Schedule",
+  "noSettings": "No schedule uploaded yet. Add one in Settings.",
+  "scheduleMissing": "No schedule file",
+  "scheduleStats": "{subjects} subjects • {events} classes",
+  "scheduleDateRange": "from {start} to {end}",
+  "changeSchedule": "Change schedule",
+  "uploadSchedule": "Upload schedule",
+  "whereToGetSchedule": "Where can I get the schedule file?",
+  "scheduleSourceInstructions": "Open tvarkarasciai.vu.lt, find your faculty and group, tap the calendar export button and download the .ics file. Then come back here and upload it using the \"Upload schedule\" button.",
+  "linkCopied": "Link copied",
+  "scheduleAlreadyExistsTitle": "Schedule already exists",
+  "scheduleAlreadyExistsMessage": "The schedule \"{name}\" already exists. Upload it again?\n\nNote: subgroup settings for this schedule will be reset.",
+  "upload": "Upload",
+  "parsingError": "Couldn't read the schedule file",
+  "scheduleUnnamed": "Schedule {date}"
 }

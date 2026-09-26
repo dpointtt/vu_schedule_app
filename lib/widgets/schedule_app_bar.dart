@@ -46,9 +46,9 @@ class ScheduleAppBar extends StatelessWidget {
                       isNext: isNext,
                     ),
                     Text(
-                      // "$faculty (${program.substring(0, 3)}.) ${course}k. ${group}gr.",
                       groupLabel,
                       style: TextStyle(
+                        fontSize: 10,
                         color: textColor.withValues(alpha: 0.5),
                       ),
                     ),

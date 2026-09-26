@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:vu_parser/vu_parser.dart';
+import 'package:vu_schedule_app/db/app_database.dart';
 import 'package:vu_schedule_app/l10n/app_localizations.dart';
 import 'package:vu_schedule_app/styles/colors.dart';
 
 class EventCard extends StatelessWidget {
+  final String title;
   final ScheduleEvent event;
   final bool isNow;
 
   const EventCard({
     super.key,
+    required this.title,
     required this.event,
     this.isNow = false,
   });
@@ -55,7 +57,7 @@ class EventCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      (event.className != null ? _formatTime(event.start) : '00:00'),
+                      (_formatTime(event.start)),
                       style: TextStyle(
                         color: textColor,
                         fontSize: 24,
@@ -66,7 +68,7 @@ class EventCard extends StatelessWidget {
                     const SizedBox(height: 4),
 
                     Text(
-                      (event.className != null ? _formatTime(event.end) : '23:59'),
+                      (_formatTime(event.end)),
                       style: TextStyle(
                         color: textColor.withValues(alpha: 0.55),
                         fontSize: 17,
@@ -104,13 +106,11 @@ class EventCard extends StatelessWidget {
               ),
             ),
 
-            // Вертикальный разделитель
             Container(
               width: 1,
               color: textColor.withValues(alpha: 0.1),
             ),
 
-            // Основная информация
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -123,7 +123,7 @@ class EventCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      event.title,
+                      title,
                       style: TextStyle(
                         color: textColor,
                         fontSize: 24,
@@ -134,17 +134,10 @@ class EventCard extends StatelessWidget {
 
                     const SizedBox(height: 8),
 
-                    // Badges
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        if (event.className == null)
-                          _Badge(
-                            icon: Icons.calendar_month,
-                            text: 'Ilsėkitės!',
-                          ),
-
                         if (event.subgroups != null &&
                             event.subgroups!.isNotEmpty)
                           _Badge(
@@ -161,7 +154,6 @@ class EventCard extends StatelessWidget {
                       ],
                     ),
 
-                    // Преподаватель
                     if (event.professors != null &&
                         event.professors!.isNotEmpty) ...[
                       const SizedBox(height: 16),
@@ -187,7 +179,6 @@ class EventCard extends StatelessWidget {
                       ),
                     ],
 
-                    // Аудитория
                     if (event.classroom != null &&
                         event.classroom!.isNotEmpty) ...[
                       const SizedBox(height: 14),
@@ -196,7 +187,7 @@ class EventCard extends StatelessWidget {
                           Icon(
                             Icons.location_on_outlined,
                             color: textColor.withValues(alpha: 0.7),
-                            size: 24,
+                            size: 18,
                           ),
                           const SizedBox(width: 4),
                           Expanded(

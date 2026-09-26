@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:vu_parser/vu_parser.dart';
+import 'package:vu_schedule_app/db/app_database.dart';
+import 'package:vu_schedule_app/db/repositories/subgroups_repository.dart';
 import 'package:vu_schedule_app/styles/colors.dart';
 
 import '../l10n/app_localizations.dart';
-import '../storage/storage_service.dart';
 
 class SubgroupsSelectionPage extends StatefulWidget {
-  final List<ScheduleEvent> events;
-
-  const SubgroupsSelectionPage({
-    super.key,
-    required this.events,
-  });
+  const SubgroupsSelectionPage({super.key});
 
   @override
   State<SubgroupsSelectionPage> createState() =>
@@ -19,55 +14,53 @@ class SubgroupsSelectionPage extends StatefulWidget {
 }
 
 class _SubgroupsSelectionPageState extends State<SubgroupsSelectionPage> {
-  Map<String, int> subgroups = {};
-  bool _isLoading = true;
+  final SubgroupsRepository subgroupsRepository =
+  SubgroupsRepository(AppDatabase());
+
+  List<SubjectSubgroups> subjects = [];
+  Map<int, int> selectedSubgroups = {};
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadSubgroups();
+    _load();
   }
 
-  Future<void> _loadSubgroups() async {
-    final saved = await StorageService.getSubgroups();
+  Future<void> _load() async {
+    final loadedSubjects = await subgroupsRepository.getSubjectsWithSubgroups();
+    final loadedSelection = await subgroupsRepository.getSelectedSubgroups();
 
     if (!mounted) return;
 
     setState(() {
-      subgroups = Map<String, int>.from(saved);
-      _isLoading = false;
+      subjects = loadedSubjects;
+      selectedSubgroups = loadedSelection;
+      isLoading = false;
     });
   }
 
-  Future<void> _openSubgroupDialog(ScheduleEvent event) async {
-    final className = event.className;
-    if (className == null) return;
-
-    final currentSubgroup = subgroups[className];
-
-    final result = await showDialog<String>(
+  Future<void> _openSubgroupDialog(SubjectSubgroups item) async {
+    final result = await showDialog<int>(
       context: context,
-      builder: (context) {
-        return _SubgroupDialog(
-          event: event,
-          className: className,
-          currentSubgroup: currentSubgroup,
-        );
-      },
+      builder: (context) => _SubgroupDialog(
+        subject: item.subject,
+        availableNumbers: item.availableNumbers,
+        currentSubgroup: selectedSubgroups[item.subject.id],
+      ),
     );
 
     if (result == null) return;
 
-    final parsedSubgroup = int.tryParse(result.trim());
-
-    if (parsedSubgroup != null) {
-      subgroups[className] = parsedSubgroup;
+    if (result == -1) {
+      await subgroupsRepository.clearSubgroup(item.subject.id);
+      selectedSubgroups.remove(item.subject.id);
     } else {
-      subgroups.remove(className);
+      await subgroupsRepository.setSubgroup(item.subject.id, result);
+      selectedSubgroups[item.subject.id] = result;
     }
 
-    await StorageService.setSubgroups(subgroups);
-
+    if (!mounted) return;
     setState(() {});
   }
 
@@ -84,9 +77,9 @@ class _SubgroupsSelectionPageState extends State<SubgroupsSelectionPage> {
           style: TextStyle(color: textColor),
         ),
       ),
-      body: _isLoading
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : widget.events.isEmpty
+          : subjects.isEmpty
           ? Center(
         child: Text(
           AppLocalizations.of(context)!.subgroupsSelectionEmpty,
@@ -95,22 +88,18 @@ class _SubgroupsSelectionPageState extends State<SubgroupsSelectionPage> {
       )
           : ListView.separated(
         padding: const EdgeInsets.all(16),
-        itemCount: widget.events.length,
+        itemCount: subjects.length,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
-          final event = widget.events[index];
-          final className = event.className;
-
-          if (className == null) return const SizedBox.shrink();
-
-          final selectedSubgroup = subgroups[className];
+          final item = subjects[index];
+          final selectedSubgroup = selectedSubgroups[item.subject.id];
 
           return Material(
             color: secondaryColor,
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: () => _openSubgroupDialog(event),
+              onTap: () => _openSubgroupDialog(item),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -119,26 +108,13 @@ class _SubgroupsSelectionPageState extends State<SubgroupsSelectionPage> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.title,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            className,
-                            style: TextStyle(
-                              color: textColor.withValues(alpha: 0.5),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        item.subject.title,
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -177,37 +153,16 @@ class _SubgroupsSelectionPageState extends State<SubgroupsSelectionPage> {
   }
 }
 
-class _SubgroupDialog extends StatefulWidget {
-  final ScheduleEvent event;
-  final String className;
+class _SubgroupDialog extends StatelessWidget {
+  final Subject subject;
+  final List<int> availableNumbers;
   final int? currentSubgroup;
 
   const _SubgroupDialog({
-    required this.event,
-    required this.className,
+    required this.subject,
+    required this.availableNumbers,
     required this.currentSubgroup,
   });
-
-  @override
-  State<_SubgroupDialog> createState() => _SubgroupDialogState();
-}
-
-class _SubgroupDialogState extends State<_SubgroupDialog> {
-  late final TextEditingController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = TextEditingController(
-      text: widget.currentSubgroup?.toString() ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -217,61 +172,34 @@ class _SubgroupDialogState extends State<_SubgroupDialog> {
         borderRadius: BorderRadius.circular(18),
       ),
       title: Text(
-        widget.event.title,
+        subject.title,
         style: TextStyle(
           color: textColor,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.className,
-              style: TextStyle(
-                color: textColor.withValues(alpha: 0.6),
-                fontSize: 13,
-              ),
+      content: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: availableNumbers.map((number) {
+          final isSelected = number == currentSubgroup;
+          return ChoiceChip(
+            label: Text('$number'),
+            selected: isSelected,
+            onSelected: (_) => Navigator.pop(context, number),
+            selectedColor: accentColor,
+            backgroundColor: backgroundColor,
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : textColor,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: textColor),
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.subgroupNumber,
-                labelStyle: TextStyle(
-                  color: textColor.withValues(alpha: 0.6),
-                ),
-                hintText: AppLocalizations.of(context)!.subgroupNumber,
-                hintStyle: TextStyle(
-                  color: textColor.withValues(alpha: 0.3),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: textColor.withValues(alpha: 0.2),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: accentColor),
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        }).toList(),
       ),
       actions: [
-        if (widget.currentSubgroup != null)
+        if (currentSubgroup != null)
           TextButton(
-            onPressed: () {
-              Navigator.pop(context, '');
-            },
+            onPressed: () => Navigator.pop(context, -1),
             child: Text(
               AppLocalizations.of(context)!.remove,
               style: TextStyle(color: Colors.redAccent),
@@ -282,21 +210,6 @@ class _SubgroupDialogState extends State<_SubgroupDialog> {
           child: Text(
             AppLocalizations.of(context)!.cancel,
             style: TextStyle(color: textColor.withValues(alpha: 0.6)),
-          ),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: accentColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          onPressed: () {
-            Navigator.pop(context, controller.text);
-          },
-          child: Text(
-            AppLocalizations.of(context)!.save,
-            style: TextStyle(color: Colors.white),
           ),
         ),
       ],

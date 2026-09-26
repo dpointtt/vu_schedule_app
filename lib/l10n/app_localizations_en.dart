@@ -15,7 +15,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEvents => 'There are no classes today!';
 
   @override
-  String get noSettings => 'Select your study group in the settings!';
+  String get noSettings => 'No schedule uploaded yet. Add one in Settings.';
 
   @override
   String get now => 'NOW';
@@ -103,4 +103,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get save => 'Save';
+
+  @override
+  String get scheduleSectionTitle => 'Schedule';
+
+  @override
+  String get scheduleMissing => 'No schedule file';
+
+  @override
+  String scheduleStats(Object events, Object subjects) {
+    return '$subjects subjects • $events classes';
+  }
+
+  @override
+  String scheduleDateRange(Object end, Object start) {
+    return 'from $start to $end';
+  }
+
+  @override
+  String get changeSchedule => 'Change schedule';
+
+  @override
+  String get uploadSchedule => 'Upload schedule';
+
+  @override
+  String get whereToGetSchedule => 'Where can I get the schedule file?';
+
+  @override
+  String get scheduleSourceInstructions =>
+      'Open tvarkarasciai.vu.lt, find your faculty and group, tap the calendar export button and download the .ics file. Then come back here and upload it using the \"Upload schedule\" button.';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String get scheduleAlreadyExistsTitle => 'Schedule already exists';
+
+  @override
+  String scheduleAlreadyExistsMessage(Object name) {
+    return 'The schedule \"$name\" already exists. Upload it again?\n\nNote: subgroup settings for this schedule will be reset.';
+  }
+
+  @override
+  String get upload => 'Upload';
+
+  @override
+  String get parsingError => 'Couldn\'t read the schedule file';
+
+  @override
+  String scheduleUnnamed(Object date) {
+    return 'Schedule $date';
+  }
 }

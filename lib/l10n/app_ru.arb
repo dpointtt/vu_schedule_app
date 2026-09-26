@@ -40,5 +40,21 @@
   "subgroupsSelectionEmpty": "Занятия не найдены.",
   "cancel": "Отменить",
   "remove": "Удалить",
-  "save": "Сохранить"
+  "save": "Сохранить",
+
+  "scheduleSectionTitle": "Расписание",
+  "noSettings": "Расписание ещё не загружено. Добавьте его в настройках.",
+  "scheduleMissing": "Файл расписания отсутствует",
+  "scheduleStats": "{subjects} предметов • {events} занятий",
+  "scheduleDateRange": "с {start} по {end}",
+  "changeSchedule": "Изменить расписание",
+  "uploadSchedule": "Загрузить расписание",
+  "whereToGetSchedule": "Где взять файл расписания?",
+  "scheduleSourceInstructions": "Откройте сайт tvarkarasciai.vu.lt, найдите свой факультет и группу, нажмите кнопку экспорта в календарь и скачайте файл с расширением .ics. После этого вернитесь сюда и загрузите его через кнопку «Загрузить расписание».",
+  "linkCopied": "Ссылка скопирована",
+  "scheduleAlreadyExistsTitle": "Расписание уже существует",
+  "scheduleAlreadyExistsMessage": "Расписание «{name}» уже существует. Загрузить его повторно?\n\nПримечание: настройки подгрупп для этого расписания будут сброшены.",
+  "upload": "Загрузить",
+  "parsingError": "Не удалось распознать файл расписания",
+  "scheduleUnnamed": "Расписание {date}"
 }

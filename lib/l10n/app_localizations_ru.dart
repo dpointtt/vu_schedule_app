@@ -15,7 +15,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noEvents => 'Сегодня занятий нет!';
 
   @override
-  String get noSettings => 'Укажите свою учебную группу в настройках!';
+  String get noSettings =>
+      'Расписание ещё не загружено. Добавьте его в настройках.';
 
   @override
   String get now => 'СЕЙЧАС';
@@ -104,4 +105,55 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get save => 'Сохранить';
+
+  @override
+  String get scheduleSectionTitle => 'Расписание';
+
+  @override
+  String get scheduleMissing => 'Файл расписания отсутствует';
+
+  @override
+  String scheduleStats(Object events, Object subjects) {
+    return '$subjects предметов • $events занятий';
+  }
+
+  @override
+  String scheduleDateRange(Object end, Object start) {
+    return 'с $start по $end';
+  }
+
+  @override
+  String get changeSchedule => 'Изменить расписание';
+
+  @override
+  String get uploadSchedule => 'Загрузить расписание';
+
+  @override
+  String get whereToGetSchedule => 'Где взять файл расписания?';
+
+  @override
+  String get scheduleSourceInstructions =>
+      'Откройте сайт tvarkarasciai.vu.lt, найдите свой факультет и группу, нажмите кнопку экспорта в календарь и скачайте файл с расширением .ics. После этого вернитесь сюда и загрузите его через кнопку «Загрузить расписание».';
+
+  @override
+  String get linkCopied => 'Ссылка скопирована';
+
+  @override
+  String get scheduleAlreadyExistsTitle => 'Расписание уже существует';
+
+  @override
+  String scheduleAlreadyExistsMessage(Object name) {
+    return 'Расписание «$name» уже существует. Загрузить его повторно?\n\nПримечание: настройки подгрупп для этого расписания будут сброшены.';
+  }
+
+  @override
+  String get upload => 'Загрузить';
+
+  @override
+  String get parsingError => 'Не удалось распознать файл расписания';
+
+  @override
+  String scheduleUnnamed(Object date) {
+    return 'Расписание $date';
+  }
 }

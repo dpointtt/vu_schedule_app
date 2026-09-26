@@ -15,7 +15,8 @@ class AppLocalizationsLt extends AppLocalizations {
   String get noEvents => 'Šiandien paskaitų nėra!';
 
   @override
-  String get noSettings => 'Nurodykite savo mokomąją grupę nustatymuose!';
+  String get noSettings =>
+      'Tvarkaraštis dar neįkeltas. Pridėkite jį nustatymuose.';
 
   @override
   String get now => 'DABAR';
@@ -104,4 +105,55 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get save => 'Išsaugoti';
+
+  @override
+  String get scheduleSectionTitle => 'Tvarkaraštis';
+
+  @override
+  String get scheduleMissing => 'Tvarkaraščio failo nėra';
+
+  @override
+  String scheduleStats(Object events, Object subjects) {
+    return '$subjects dalykų • $events užsiėmimų';
+  }
+
+  @override
+  String scheduleDateRange(Object end, Object start) {
+    return 'nuo $start iki $end';
+  }
+
+  @override
+  String get changeSchedule => 'Keisti tvarkaraštį';
+
+  @override
+  String get uploadSchedule => 'Įkelti tvarkaraštį';
+
+  @override
+  String get whereToGetSchedule => 'Kur gauti tvarkaraščio failą?';
+
+  @override
+  String get scheduleSourceInstructions =>
+      'Atsidarykite svetainę tvarkarasciai.vu.lt, susiraskite savo fakultetą ir grupę, paspauskite kalendoriaus eksporto mygtuką ir atsisiųskite .ics formato failą. Tada grįžkite čia ir įkelkite jį mygtuku „Įkelti tvarkaraštį“.';
+
+  @override
+  String get linkCopied => 'Nuoroda nukopijuota';
+
+  @override
+  String get scheduleAlreadyExistsTitle => 'Toks tvarkaraštis jau yra';
+
+  @override
+  String scheduleAlreadyExistsMessage(Object name) {
+    return 'Tvarkaraštis „$name“ jau egzistuoja. Įkelti jį dar kartą?\n\nPastaba: šio tvarkaraščio pogrupių nustatymai bus atstatyti.';
+  }
+
+  @override
+  String get upload => 'Įkelti';
+
+  @override
+  String get parsingError => 'Nepavyko atpažinti tvarkaraščio failo';
+
+  @override
+  String scheduleUnnamed(Object date) {
+    return 'Tvarkaraštis $date';
+  }
 }

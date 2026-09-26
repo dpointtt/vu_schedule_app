@@ -117,7 +117,7 @@ abstract class AppLocalizations {
   /// No description provided for @noSettings.
   ///
   /// In lt, this message translates to:
-  /// **'Nurodykite savo mokomąją grupę nustatymuose!'**
+  /// **'Tvarkaraštis dar neįkeltas. Pridėkite jį nustatymuose.'**
   String get noSettings;
 
   /// No description provided for @now.
@@ -287,6 +287,90 @@ abstract class AppLocalizations {
   /// In lt, this message translates to:
   /// **'Išsaugoti'**
   String get save;
+
+  /// No description provided for @scheduleSectionTitle.
+  ///
+  /// In lt, this message translates to:
+  /// **'Tvarkaraštis'**
+  String get scheduleSectionTitle;
+
+  /// No description provided for @scheduleMissing.
+  ///
+  /// In lt, this message translates to:
+  /// **'Tvarkaraščio failo nėra'**
+  String get scheduleMissing;
+
+  /// No description provided for @scheduleStats.
+  ///
+  /// In lt, this message translates to:
+  /// **'{subjects} dalykų • {events} užsiėmimų'**
+  String scheduleStats(Object events, Object subjects);
+
+  /// No description provided for @scheduleDateRange.
+  ///
+  /// In lt, this message translates to:
+  /// **'nuo {start} iki {end}'**
+  String scheduleDateRange(Object end, Object start);
+
+  /// No description provided for @changeSchedule.
+  ///
+  /// In lt, this message translates to:
+  /// **'Keisti tvarkaraštį'**
+  String get changeSchedule;
+
+  /// No description provided for @uploadSchedule.
+  ///
+  /// In lt, this message translates to:
+  /// **'Įkelti tvarkaraštį'**
+  String get uploadSchedule;
+
+  /// No description provided for @whereToGetSchedule.
+  ///
+  /// In lt, this message translates to:
+  /// **'Kur gauti tvarkaraščio failą?'**
+  String get whereToGetSchedule;
+
+  /// No description provided for @scheduleSourceInstructions.
+  ///
+  /// In lt, this message translates to:
+  /// **'Atsidarykite svetainę tvarkarasciai.vu.lt, susiraskite savo fakultetą ir grupę, paspauskite kalendoriaus eksporto mygtuką ir atsisiųskite .ics formato failą. Tada grįžkite čia ir įkelkite jį mygtuku „Įkelti tvarkaraštį“.'**
+  String get scheduleSourceInstructions;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In lt, this message translates to:
+  /// **'Nuoroda nukopijuota'**
+  String get linkCopied;
+
+  /// No description provided for @scheduleAlreadyExistsTitle.
+  ///
+  /// In lt, this message translates to:
+  /// **'Toks tvarkaraštis jau yra'**
+  String get scheduleAlreadyExistsTitle;
+
+  /// No description provided for @scheduleAlreadyExistsMessage.
+  ///
+  /// In lt, this message translates to:
+  /// **'Tvarkaraštis „{name}“ jau egzistuoja. Įkelti jį dar kartą?\n\nPastaba: šio tvarkaraščio pogrupių nustatymai bus atstatyti.'**
+  String scheduleAlreadyExistsMessage(Object name);
+
+  /// No description provided for @upload.
+  ///
+  /// In lt, this message translates to:
+  /// **'Įkelti'**
+  String get upload;
+
+  /// No description provided for @parsingError.
+  ///
+  /// In lt, this message translates to:
+  /// **'Nepavyko atpažinti tvarkaraščio failo'**
+  String get parsingError;
+
+  /// No description provided for @scheduleUnnamed.
+  ///
+  /// In lt, this message translates to:
+  /// **'Tvarkaraštis {date}'**
+  String scheduleUnnamed(Object date);
 }
 
 class _AppLocalizationsDelegate
